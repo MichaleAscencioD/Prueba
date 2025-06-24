@@ -1,5 +1,36 @@
-# Vue 3 + TypeScript + Vite
+# Aplicación de entrenamientos
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## Funcionalidades
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+- Agregar entrenamientos con título, descripción, duración, distancia y fecha.
+- Mostrar los entrenamientos ordenados de más recientes a más antiguos.
+- Editar y eliminar entrenamientos existentes.
+- Confirmación antes de eliminar un entrenamiento.
+- Modal de edición con validaciones de campos.
+- Integración con Firebase Firestore.
+
+## Tecnologías
+
+- **Vue 3** + Composition API
+- **TypeScript**
+- **Tailwind CSS**
+- **Firebase Firestore**
+
+  ## Instalación
+
+1. Clona este repositorio:
+
+<pre> git clone "https://github.com/MichaleAscencioD/Prueba.git" </pre>
+
+2. Sí el proyecto será ejecutado en una maquina fisica instalar node
+  https://nodejs.org/es
+
+3. Instala las dependencias:
+
+<pre> npm install </pre>
+<pre> npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+</pre>
+<pre> npm install firebase </pre>
+
+4. Agregar las credenciales del firebase a usar en el archivo .env con la sintax del [.env.example](./.env.example)
