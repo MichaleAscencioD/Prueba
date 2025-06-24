@@ -1,16 +1,48 @@
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import type { Entrenamiento } from '../models/Entrenamiento'
+import {
+  agregarEntrenamiento as agregarFirestore,
+  obtenerEntrenamientos,
+  actualizarEntrenamiento as actualizarFirestore,
+  eliminarEntrenamiento as eliminarFirestore
+} from '../services/entrenamientoService'
 
-export const entrenamientos = ref<Entrenamiento[]>([
-  { id: '1', titulo: 'Cardio Rápido', descripcion: 'Alta intensidad', fecha: '02-02-2002', duracion: 85, distancia: 100 },
-  { id: '2', titulo: 'Resistencia', descripcion: 'Mediana intensidad', fecha: '03-02-2002', duracion: 120, distancia: 100 },
-  { id: '3', titulo: 'Maraton', descripcion: 'Baja intensidad', fecha: '04-02-2002', duracion: 200, distancia: 100 },
-])
+export const entrenamientos = ref<Entrenamiento[]>([])
 
-export const eliminarEntrenamiento = (index: number) => {
-  entrenamientos.value.splice(index, 1)
+onMounted(async () => {
+  entrenamientos.value = await obtenerEntrenamientos()
+})
+
+//Función auxiliar para generar el siguiente ID numérico como string
+const generarIdSecuencial = (): string => {
+  const ids = entrenamientos.value
+    .map(e => Number(e.id))
+    .filter(id => !isNaN(id))
+
+  const maxId = ids.length ? Math.max(...ids) : 0
+  return String(maxId + 1)
 }
 
-export const actualizarEntrenamiento = (index: number, nuevo: Entrenamiento) => {
-  entrenamientos.value[index] = nuevo
+export const crearEntrenamiento = async (nuevo: Entrenamiento) => {
+  const nuevoConId: Entrenamiento = {
+    ...nuevo,
+    id: generarIdSecuencial()
+  }
+
+  await agregarFirestore(nuevoConId)
+  entrenamientos.value = await obtenerEntrenamientos()
+}
+
+export const editarEntrenamiento = async (id: string, actualizado: Entrenamiento) => {
+  await actualizarFirestore(id, actualizado)
+  entrenamientos.value = await obtenerEntrenamientos()
+}
+
+export const borrarEntrenamiento = async (id: string) => {
+  await eliminarFirestore(id)
+  entrenamientos.value = await obtenerEntrenamientos()
+}
+
+export const cargarEntrenamientos = async () => {
+  entrenamientos.value = await obtenerEntrenamientos()
 }

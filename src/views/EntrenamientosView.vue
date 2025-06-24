@@ -3,59 +3,84 @@
     <h1 class="text-4xl font-bold text-blue-600 text-align-center">Bienvenido a Entrenamientos</h1>
 
     <div class="my-6 flex justify-center">
-      <button @click="abrirModalEdicion(-1)" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+      <button @click="abrirModalEdicion(null)" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
         Agregar entrenamiento
       </button>
-
     </div>
 
-    <h2 class="text-xl font-bold mb-4">Historial de Entrenamiento</h2>
-    <div v-if="entrenamientos.length === 0" class="text-gray-500">No hay datos para mostrar</div>
+    <h2 class="text-xl font-bold mb-4">Historial de Entrenamientos</h2>
 
-    <div class="cards">
-      <div v-for="(entreno, index) in entrenamientosOrdenados" :key="index" class="card" :class="getColorClass(entreno.duracion)">
-        <p class="tip">{{ entreno.titulo }}</p>
-        <p class="second-text">{{ entreno.descripcion }} ({{ entreno.duracion }} min)</p>
-        <div class="mt-2 flex gap-2">
-          <button @click="abrirModalEdicion(index)" class="bg-white text-black text-xs px-2 py-1 rounded">Editar</button>
-          <button @click="eliminarEntrenamiento(index)" class="bg-white text-black text-xs px-2 py-1 rounded">Eliminar</button>
-        </div>
-      </div>
+<!-- Mostrar mientras carga -->
+<div v-if="cargando" class="text-gray-500">Cargando entrenamientos...</div>
+
+<!-- Mostrar si no hay entrenamientos -->
+<div v-else-if="entrenamientos.length === 0" class="text-gray-500">No hay datos para mostrar</div>
+
+<!-- Mostrar los entrenamientos -->
+<div v-else class="cards">
+  <div
+    v-for="entreno in entrenamientosOrdenados"
+    :key="entreno.id"
+    class="card"
+    :class="getColorClass(entreno.duracion)"
+  >
+    <p class="tip">{{ entreno.titulo }}</p>
+    <p class="second-text">{{ entreno.descripcion }} ({{ entreno.duracion }} min)</p>
+    <p class="second-text text-sm">{{ entreno.fecha }}</p>
+    <div class="mt-2 flex gap-2">
+      <button @click="entreno.id && abrirModalEdicion(entreno.id)" class="bg-white text-black text-xs px-2 py-1 rounded">
+        Editar
+      </button>
+      <button @click="entreno.id && borrarEntrenamientoPorId(entreno.id)" class="bg-white text-black text-xs px-2 py-1 rounded">
+        Eliminar
+      </button>
     </div>
+  </div>
+</div>
 
-    <!-- Modal de edición -->
-    <EntrenamientoModal
-      :visible="modalVisible"
-      :index="editIndex"
-      :entrenamiento="entrenamientoSeleccionado"
-      @close="cerrarModal"
-      @update="actualizarEntrenamiento"
-    />
+
+    <EntrenamientoModal :visible="modalVisible" :id="editId" :entrenamiento="entrenamientoSeleccionado"
+      @close="cerrarModal" @update="editarEntrenamientoPorId" @create="crearEntrenamiento" />
   </div>
 </template>
 
+
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { entrenamientos, eliminarEntrenamiento, actualizarEntrenamiento } from '../controllers/entrenamientoController'
+import { onMounted, ref, computed } from 'vue'
+import {
+  entrenamientos,
+  crearEntrenamiento,
+  editarEntrenamiento,
+  borrarEntrenamiento,
+  cargarEntrenamientos
+} from '../controllers/entrenamientoController'
+
 import type { Entrenamiento } from '../models/Entrenamiento'
 import EntrenamientoModal from './EntrenamientoModal.vue'
 
 const modalVisible = ref(false)
-const editIndex = ref<number | null>(null)
+const editId = ref<string | null>(null)
 
 const entrenamientoSeleccionado = computed(() =>
-  editIndex.value !== null && editIndex.value >= 0 ? entrenamientos.value[editIndex.value] : null
+  editId.value ? entrenamientos.value.find(e => e.id === editId.value) ?? null : null
 )
 
-
-const abrirModalEdicion = (index: number) => {
-  editIndex.value = index
+const abrirModalEdicion = (id: string | null) => {
+  editId.value = id
   modalVisible.value = true
 }
 
 const cerrarModal = () => {
   modalVisible.value = false
-  editIndex.value = null
+  editId.value = null
+}
+
+const editarEntrenamientoPorId = async (id: string, actualizado: Entrenamiento) => {
+  await editarEntrenamiento(id, actualizado)
+}
+
+const borrarEntrenamientoPorId = async (id: string) => {
+  await borrarEntrenamiento(id)
 }
 
 const getColorClass = (tiempo: number): string => {
@@ -68,6 +93,14 @@ const entrenamientosOrdenados = computed(() => {
   return [...entrenamientos.value].sort((a, b) => {
     return new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
   })
+})
+
+const cargando = ref(true)
+
+onMounted(async () => {
+  cargando.value = true
+  await cargarEntrenamientos()
+  cargando.value = false
 })
 
 
